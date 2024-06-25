@@ -129,13 +129,6 @@ class Score:
         self.img = self.font.render(f"Score: {self.score}", 0, self.color)
         screen.blit(self.img, self.rct)
 
-    def increase(self, points: int):
-        """
-        スコアを増加させる
-        引数 points：増加させるポイント数
-        """
-        self.score += points
-
 
 class Bomb:
     """
@@ -204,7 +197,7 @@ def main():
                         bombs[i] = None
                         beams[j] = None
                         bird.change_img(6, screen)
-                        score.increase(1)  # スコアを1点増加
+                        score.score+= 1  # スコアを1点増加
                         pg.display.update()
 
         # リストの要素がNoneでないものだけに更新
