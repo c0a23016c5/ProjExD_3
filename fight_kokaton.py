@@ -7,7 +7,7 @@ import pygame as pg
 
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
-NUM_OF_BOMBS = 5
+NUM_OF_BOMBS = 5  # 爆弾の個数
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -96,8 +96,8 @@ class Beam:
         """
         self.img = pg.image.load(f"fig/beam.png")
         self.rct = self.img.get_rect()
-        self.rct.centery = bird.rct.centery
-        self.rct.left = bird.rct.right
+        self.rct.centery = bird.rct.centery  # こうかとんの中心縦座標をビームの中心縦座標に設定
+        self.rct.left = bird.rct.right  # こうかとん右座標をビーム左座標に設定
         self.vx, self.vy = +5, 0
 
     def update(self, screen: pg.Surface):
@@ -108,6 +108,33 @@ class Beam:
         if check_bound(self.rct) == (True, True):
             self.rct.move_ip(self.vx, self.vy)
             screen.blit(self.img, self.rct)    
+
+class Score:
+    """
+    スコアの表示に関するクラス
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        self.color = (0, 0, 255)
+        self.score = 0
+        self.img = self.font.render(f"Score: {self.score}", 0, self.color)
+        self.rct = self.img.get_rect()
+        self.rct.center = (100, HEIGHT - 50)
+
+    def update(self, screen: pg.Surface):
+        """
+        現在のスコアを表示させる文字列Surfaceの生成
+        引数 screen：画面Surface
+        """
+        self.img = self.font.render(f"Score: {self.score}", 0, self.color)
+        screen.blit(self.img, self.rct)
+
+    def increase(self, points: int):
+        """
+        スコアを増加させる
+        引数 points：増加させるポイント数
+        """
+        self.score += points
 
 
 class Bomb:
@@ -143,53 +170,56 @@ class Bomb:
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
-    screen = pg.display.set_mode((WIDTH, HEIGHT))    
+    screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
     beam = None
-    #bomb = Bomb((255, 0, 0), 10)
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+    score = Score()
     clock = pg.time.Clock()
     tmr = 0
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beam = Beam(bird)
+
         screen.blit(bg_img, [0, 0])
-        
+
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
-                #bird.change_img(8, screen)
-                fonto = pg.font.Font(None, 80)
-                txt = fonto.render("Game Over", True, (255, 0, 0))
-                screen.blit(txt, [WIDTH/2-150, HEIGHT/2])
-                pg.display.update()
-                time.sleep(5)
+                bird.change_img(8, screen)
                 pg.display.update()
                 time.sleep(1)
                 return
-        
+
         for i in range(len(bombs)):
             if beam is not None:
-                if bombs[i].rct.colliderect(beam.rct):
+                if bombs[i] is not None and bombs[i].rct.colliderect(beam.rct):
                     bombs[i] = None
-                    beam = None    
+                    beam = None
                     bird.change_img(6, screen)
-        bombs = [bomb for bomb in bombs if bomb is not None]  
+                    score.increase(1)  # スコアを1点増加
+                    pg.display.update()
+
+        bombs = [bomb for bomb in bombs if bomb is not None]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         if beam is not None:
-            beam.update(screen) 
-        if bomb in bombs:  
+            beam.update(screen)
+        for bomb in bombs:
             bomb.update(screen)
+        
+        score.update(screen)  # スコアを描画
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
 
 
 if __name__ == "__main__":
