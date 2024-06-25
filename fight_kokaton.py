@@ -88,14 +88,14 @@ class Beam:
     """
     こうかとんが放つビームに関するクラス
     """
-    def イニシャライザ(self, bird:"Bird"):
+    def __init__(self, bird:"Bird"):
         """
         ビーム画像Surfaceを生成する
         引数 bird：ビームを放つこうかとん（Birdインスタンス）
         """
         self.img = pg.image.load(f"fig/beam.png")
         self.rct = self.img.get_rect()
-        self.rct.center = bird.rct.centery
+        self.rct.centery = bird.rct.centery
         self.rct.left = bird.rct.right
         self.vx, self.vy = +5, 0
 
@@ -158,18 +158,26 @@ def main():
                 beam = Beam(bird)            
         screen.blit(bg_img, [0, 0])
         
-        if bird.rct.colliderect(bomb.rct):
-            # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
-            bird.change_img(8, screen)
-            pg.display.update()
-            time.sleep(1)
-            return
+        if bomb is not None:
+            if bird.rct.colliderect(bomb.rct):
+                # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
+                bird.change_img(8, screen)
+                pg.display.update()
+                time.sleep(1)
+                return
+        
+        if bomb is not None:
+            if beam is not None:
+                if bomb.rct.colliderect(beam.rct):
+                    bomb = None
+                    beam = None    
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         if beam is not None:
-            beam.update(screen)   
-        bomb.update(screen)
+            beam.update(screen) 
+        if bomb is not None:  
+            bomb.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
